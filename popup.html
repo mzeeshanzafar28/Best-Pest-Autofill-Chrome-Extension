@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { width: 600px; padding: 15px; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; }
+    h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+    .category { margin-bottom: 15px; }
+    .category-title { font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 5px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    
+    button {
+      padding: 10px 8px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    button:hover { border-color: #007bff; color: #007bff; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    /* Color coding by Target Pest */
+    button[data-target="215"] { border-left: 3px solid #ff9800; } /* Roaches - Orange */
+    button[data-target="36"] { border-left: 3px solid #f44336; }  /* Bed Bugs - Red */
+    button[data-target="221"] { border-left: 3px solid #4caf50; } /* Rodents - Green */
+    button[data-target="208"] { border-left: 3px solid #2196f3; } /* Ants - Blue */
+  </style>
+</head>
+<body>
+
+  <div class="category">
+    <div class="category-title">Sprays & Concentrates (Kitchen/Bath)</div>
+    <div class="grid">
+      <button data-id="190" data-qty="2" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Temprid FX</button>
+      <button data-id="201" data-qty="0.5" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Zenprox EC</button>
+      <button data-id="200" data-qty="0.25" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Bithor SC</button>
+      <button data-id="170" data-qty="0.625" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Suspend SC</button>
+      <button data-id="169" data-qty="1" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Talstar P</button>
+      <button data-id="186" data-qty="1.25" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Transport Mikron</button>
+      <button data-id="237" data-qty="0" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">FenvaStar Plus</button>
+      <button data-id="187" data-qty="0" data-loc="16|Kitchen" data-method="3" data-equip="9" data-target="215">Phantom</button>
+      <button data-id="188" data-qty="13" data-loc="7|Bedroom" data-method="3" data-equip="9" data-target="36">Cross Fire</button>
+      <button data-id="88" data-qty="0.25" data-loc="0|None" data-method="3" data-equip="9" data-target="215">ExciteR</button>
+      <button data-id="258" data-qty="5" data-loc="16|Kitchen" data-method="3" data-equip="25" data-target="215">SureKill CT-511</button>
+      <button data-id="52" data-qty="6" data-loc="7|Bedroom" data-method="3" data-equip="25" data-target="36">Bedlam</button>
+      <button data-id="94" data-qty="0.25" data-loc="16|Kitchen" data-method="3" data-equip="25" data-target="215">Gentrol Aerosol</button>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-title">Gels & Baits</div>
+    <div class="grid">
+      <button data-id="42" data-qty="10" data-loc="16|Kitchen" data-method="3" data-equip="19" data-target="215">Advion Roach Gel</button>
+      <button data-id="191" data-qty="10" data-loc="16|Kitchen" data-method="3" data-equip="19" data-target="215">Vendetta Plus</button>
+      <button data-id="245" data-qty="10" data-loc="16|Kitchen" data-method="3" data-equip="19" data-target="215">Optigard Roach Gel</button>
+      <button data-id="95" data-qty="0.25" data-loc="16|Kitchen" data-method="3" data-equip="19" data-target="215">Gentrol IGR</button>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-title">Dusts (Outlets/Voids)</div>
+    <div class="grid">
+      <button data-id="24" data-qty="2" data-loc="61|Outlets" data-method="3" data-equip="4" data-target="36">Delta Dust</button>
+      <button data-id="208" data-qty="1" data-loc="61|Outlets" data-method="3" data-equip="4" data-target="36">CimeXa Dust</button>
+      <button data-id="248" data-qty="2" data-loc="61|Outlets" data-method="3" data-equip="5" data-target="215">Tempo Dust</button>
+      <button data-id="234" data-qty="5" data-loc="60|Wall" data-method="10" data-equip="5" data-target="221">Ditrac Track Powder</button>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-title">Rodent & Granular</div>
+    <div class="grid">
+      <button data-id="175" data-qty="10" data-loc="32|Basement" data-method="29" data-equip="6" data-target="221">First Strike</button>
+      <button data-id="242" data-qty="0" data-loc="32|Basement" data-method="29" data-equip="6" data-target="221">Flatline Soft Bait</button>
+      <button data-id="162" data-qty="2" data-loc="32|Basement" data-method="29" data-equip="39" data-target="221">Contrac Meal Pac</button>
+      <button data-id="112" data-qty="2" data-loc="0|None" data-method="29" data-equip="12" data-target="215">Niban Granules</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

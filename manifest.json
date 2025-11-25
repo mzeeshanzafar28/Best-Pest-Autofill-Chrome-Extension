@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Best@Pest Form Autofill",
+  "version": "3.0",
+  "description": "Autofills pest control forms using Main World execution.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
