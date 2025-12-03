@@ -11,7 +11,6 @@ function fillFormInPage(data) {
     const $ = window.jQuery; // Use the page's jQuery
 
     // 1. Set Material (Select2)
-    // We target the ID directly.
     if ($('#ddlmaterials').length) {
         $('#ddlmaterials').val(data.materialId).trigger('change');
         console.log("Set Material to:", data.materialId);
@@ -34,7 +33,7 @@ function fillFormInPage(data) {
             if (data.locationVal) {
                 const parts = data.locationVal.split('|');
                 const valID = data.locationVal;
-                const valText = parts[1] || "None"; // Default to None if text missing
+                const valText = parts[1] || "None"; 
 
                 // Set hidden value and visible text
                 $('#ddllocations_comboboxValue').val(valID);
@@ -53,7 +52,6 @@ function fillFormInPage(data) {
             $('#ddlequipment').val(data.equipmentId).trigger('change');
 
             // Set Target Pest
-            // Check if target is Select2 or standard
             if ($('#ddlmattarget').hasClass('select2-hidden-accessible')) {
                 $('#ddlmattarget').val(data.targetId).trigger('change');
             } else {
@@ -73,7 +71,7 @@ function fillFormInPage(data) {
 
 // Event Listener for the Popup Buttons
 document.addEventListener('DOMContentLoaded', () => {
-    // FIX: Listen to the whole body so ALL sections work, not just the first one
+    // Listen to the whole body so ALL sections work
     document.body.addEventListener('click', async (e) => {
         
         // Ensure a button was clicked
@@ -97,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             target: { tabId: tab.id },
             func: fillFormInPage,
             args: [data],
-            world: 'MAIN' // <--- CRITICAL: Allows access to window.$ and window.setlocation_V3
+            world: 'MAIN' 
         });
     });
 });
