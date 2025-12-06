@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Best@Pest Workflow Suite",
-  "version": "4.3",
+  "version": "6.0",
   "description": "Autofills materials and enhances ServerSuite scheduler workflows.",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],

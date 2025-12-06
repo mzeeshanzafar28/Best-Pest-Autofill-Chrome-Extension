@@ -64,6 +64,19 @@
       text-transform: uppercase;
     }
 
+    /* STATUS MESSAGE (Hidden by default) */
+    #injection-status {
+        display: none;
+        text-align: center;
+        font-size: 11px;
+        color: #00e676;
+        margin-bottom: 15px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 15px;
+    }
+
     /* TOGGLE SWITCH STYLE */
     .switch {
       position: relative;
@@ -166,12 +179,16 @@
 
   <h3>Material Selector</h3>
 
-  <div class="injection-control">
+  <div class="injection-control" id="injection-container">
     <span class="injection-label">Start Injection</span>
     <label class="switch">
       <input type="checkbox" id="toggle-injection">
       <span class="slider"></span>
     </label>
+  </div>
+
+  <div id="injection-status">
+    ✓ Scheduler Monitor Active
   </div>
 
   <div class="category">

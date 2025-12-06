@@ -1,6 +1,14 @@
-// -------------------------------------------------------------
-// PART 1: MATERIAL AUTOFILL (Existing Logic)
-// -------------------------------------------------------------
+// =================================================================
+// 1. HELPER: LIVE CHECKER
+// =================================================================
+// This function runs IN the web page to check if our script is active
+function checkScriptStatus() {
+    return !!window.bpMonitorActive; // Returns true if running
+}
+
+// =================================================================
+// 2. MATERIAL AUTOFILL (Runs in Main World)
+// =================================================================
 function fillFormInPage(data) {
     console.log("Extension: Starting autofill with data:", data);
 
@@ -11,12 +19,10 @@ function fillFormInPage(data) {
 
     const $ = window.jQuery;
 
-    // 1. Set Material
     if ($('#ddlmaterials').length) {
         $('#ddlmaterials').val(data.materialId).trigger('change');
     }
 
-    // 2. Set other fields after delay
     setTimeout(() => {
         try {
             if(document.getElementById('txtmatamt')) {
@@ -24,10 +30,10 @@ function fillFormInPage(data) {
                 $('#txtmatamt').trigger('keyup').trigger('blur'); 
             }
 
-            if (data.locationVal) {
+            if (data.locationVal && data.locationVal !== "0|None") {
                 const parts = data.locationVal.split('|');
                 const valID = data.locationVal;
-                const valText = parts[1] || "None"; 
+                const valText = parts[1] || ""; 
                 $('#ddllocations_comboboxValue').val(valID);
                 $('#ddllocations_textFilter').val(valText);
                 if (typeof window.setlocation_V3 === 'function') {
@@ -53,19 +59,16 @@ function fillFormInPage(data) {
     }, 300);
 }
 
-// -------------------------------------------------------------
-// PART 2: SCHEDULER INJECTOR (New Manual Trigger)
-// -------------------------------------------------------------
+// =================================================================
+// 3. SCHEDULER INJECTOR
+// =================================================================
 function startSchedulerMonitor() {
-    console.log("BEST@PEST: Manual Injection Started via Toggle!");
+    console.log("BEST@PEST: Manual Injection Started!");
 
-    if (window.bpMonitorActive) {
-        console.log("BEST@PEST: Monitor already active.");
-        return;
-    }
+    // Prevents double-injection if button is clicked multiple times
+    if (window.bpMonitorActive) return;
     window.bpMonitorActive = true;
 
-    // 1. HELPER: Check Status from Calendar DOM
     function isJobCompleted(workOrderId) {
         const jobTitleEl = document.querySelector(`.title-woheaderid[data-woheaderid="${workOrderId}"]`);
         if (!jobTitleEl) return false;
@@ -77,9 +80,7 @@ function startSchedulerMonitor() {
         return false;
     }
 
-    // 2. INJECTION LOGIC
     function updateOrInjectButton(container) {
-        // Extract Data First
         const pTag = container.querySelector('p');
         const titleElem = document.getElementById('modalTitle');
 
@@ -96,16 +97,11 @@ function startSchedulerMonitor() {
         const completed = isJobCompleted(workOrderId);
         const existingBtn = document.getElementById('btn-complete-job-ext');
 
-        // SCENARIO 1: Completed -> Remove
         if (completed) {
-            if (existingBtn) {
-                existingBtn.remove();
-                console.log(`BEST@PEST: Job #${workOrderId} is COMPLETED. Button removed.`);
-            }
+            if (existingBtn) existingBtn.remove();
             return;
         }
 
-        // SCENARIO 2: Open -> Add/Update
         if (!existingBtn) {
             const btn = document.createElement('button');
             btn.id = 'btn-complete-job-ext';
@@ -118,9 +114,6 @@ function startSchedulerMonitor() {
                 marginBottom: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             });
 
-            btn.onmouseover = () => btn.style.backgroundColor = '#218838';
-            btn.onmouseout = () => btn.style.backgroundColor = '#28a745';
-
             btn.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -129,8 +122,6 @@ function startSchedulerMonitor() {
             };
 
             container.insertBefore(btn, container.firstChild);
-            console.log(`BEST@PEST: Button CREATED for WO #${workOrderId}`);
-
         } else {
             existingBtn.onclick = function(e) {
                 e.preventDefault();
@@ -138,11 +129,9 @@ function startSchedulerMonitor() {
                 const url = `https://sprolive.theservicepro.net/office/wocompleted.aspx?accid=${accountId}&woid=${workOrderId}&type=1`;
                 window.open(url, '_blank');
             };
-            console.log(`BEST@PEST: Button UPDATED for WO #${workOrderId}`);
         }
     }
 
-    // 3. OBSERVER
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (mutation.addedNodes.length) {
@@ -159,27 +148,60 @@ function startSchedulerMonitor() {
 }
 
 
-// -------------------------------------------------------------
-// EVENT LISTENERS
-// -------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
+// =================================================================
+// 4. EVENT LISTENERS
+// =================================================================
+document.addEventListener('DOMContentLoaded', async () => {
     
-    // A. Toggle Listener
+    // A. CHECK IF SCRIPT IS ALREADY RUNNING
+    const toggleContainer = document.getElementById('injection-container');
+    const statusDiv = document.getElementById('injection-status');
     const toggle = document.getElementById('toggle-injection');
+
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        
+        // Only check on ServicePro
+        if(tab.url && tab.url.includes("theservicepro.net")) {
+            
+            // Execute the checker function
+            const results = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: checkScriptStatus,
+                world: 'MAIN'
+            });
+
+            // If it returns true, the script is running -> Hide toggle
+            if (results && results[0] && results[0].result === true) {
+                toggleContainer.style.display = 'none';
+                statusDiv.style.display = 'block';
+            }
+        }
+    } catch (e) {
+        console.log("Not on ServicePro or script error", e);
+    }
+
+    // B. HANDLE TOGGLE CLICK
     if(toggle) {
         toggle.addEventListener('change', async (e) => {
             if(e.target.checked) {
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-                chrome.scripting.executeScript({
+                
+                // Inject the script
+                await chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     func: startSchedulerMonitor,
                     world: 'MAIN'
                 });
+
+                // Update UI immediately (Hide toggle, show text)
+                toggleContainer.style.display = 'none';
+                statusDiv.style.display = 'block';
             }
         });
     }
 
-    // B. Material Buttons Listener
+    // C. HANDLE MATERIAL BUTTONS
     document.body.addEventListener('click', async (e) => {
         if (!e.target.classList.contains('mat-btn')) return;
 
