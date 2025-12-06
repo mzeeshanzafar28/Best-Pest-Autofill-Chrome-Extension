@@ -1,81 +1,187 @@
-// The function that runs INSIDE the web page
+// -------------------------------------------------------------
+// PART 1: MATERIAL AUTOFILL (Existing Logic)
+// -------------------------------------------------------------
 function fillFormInPage(data) {
     console.log("Extension: Starting autofill with data:", data);
 
-    // Helper to check if jQuery is loaded
     if (typeof window.jQuery === 'undefined') {
-        alert("Error: jQuery is not loaded on this page. The extension cannot control the form.");
+        alert("Error: jQuery is not loaded on this page.");
         return;
     }
 
-    const $ = window.jQuery; // Use the page's jQuery
+    const $ = window.jQuery;
 
-    // 1. Set Material (Select2)
+    // 1. Set Material
     if ($('#ddlmaterials').length) {
         $('#ddlmaterials').val(data.materialId).trigger('change');
-        console.log("Set Material to:", data.materialId);
-    } else {
-        console.warn("Could not find #ddlmaterials");
     }
 
-    // 2. Wait 300ms for the page to update (prices/units), then set the rest
+    // 2. Set other fields after delay
     setTimeout(() => {
         try {
-            // Set Quantity
             if(document.getElementById('txtmatamt')) {
                 document.getElementById('txtmatamt').value = data.quantity;
-                // Trigger events so totals calculate
                 $('#txtmatamt').trigger('keyup').trigger('blur'); 
             }
 
-            // Set Location (Custom ComboBox)
-            // Fix: We now allow "0|None" to run so it correctly CLEARS previous locations
             if (data.locationVal) {
                 const parts = data.locationVal.split('|');
                 const valID = data.locationVal;
                 const valText = parts[1] || "None"; 
-
-                // Set hidden value and visible text
                 $('#ddllocations_comboboxValue').val(valID);
                 $('#ddllocations_textFilter').val(valText);
-
-                // Try calling the page's specific function to register the change
                 if (typeof window.setlocation_V3 === 'function') {
                     window.setlocation_V3(valID);
                 }
             }
 
-            // Set Application Method
             $('#ddlappmethod').val(data.methodId).trigger('change');
-
-            // Set Equipment
             $('#ddlequipment').val(data.equipmentId).trigger('change');
 
-            // Set Target Pest
             if ($('#ddlmattarget').hasClass('select2-hidden-accessible')) {
                 $('#ddlmattarget').val(data.targetId).trigger('change');
             } else {
                 $('#ddlmattarget').val(data.targetId).trigger('change');
             }
 
-            // Set Target Quantity (Always 1)
             $('#txtmattargetqty').val('1').trigger('blur');
-            
             console.log("Autofill Complete");
 
         } catch (err) {
-            console.error("Error in autofill timeout:", err);
+            console.error("Error in autofill:", err);
         }
     }, 300);
 }
 
-// Event Listener for the Popup Buttons
-document.addEventListener('DOMContentLoaded', () => {
-    // Listen to the whole body so ALL sections work
-    document.body.addEventListener('click', async (e) => {
+// -------------------------------------------------------------
+// PART 2: SCHEDULER INJECTOR (New Manual Trigger)
+// -------------------------------------------------------------
+function startSchedulerMonitor() {
+    console.log("BEST@PEST: Manual Injection Started via Toggle!");
+
+    if (window.bpMonitorActive) {
+        console.log("BEST@PEST: Monitor already active.");
+        return;
+    }
+    window.bpMonitorActive = true;
+
+    // 1. HELPER: Check Status from Calendar DOM
+    function isJobCompleted(workOrderId) {
+        const jobTitleEl = document.querySelector(`.title-woheaderid[data-woheaderid="${workOrderId}"]`);
+        if (!jobTitleEl) return false;
         
-        // Ensure a button was clicked
-        if (e.target.tagName !== 'BUTTON') return;
+        const jobCard = jobTitleEl.closest('.fc-time-grid-event');
+        if (jobCard && jobCard.querySelector('.notifC')) {
+            return true;
+        }
+        return false;
+    }
+
+    // 2. INJECTION LOGIC
+    function updateOrInjectButton(container) {
+        // Extract Data First
+        const pTag = container.querySelector('p');
+        const titleElem = document.getElementById('modalTitle');
+
+        if (!pTag || !titleElem) return; 
+
+        const accMatch = pTag.innerText.match(/Account.*:\s*(\d+)/i);
+        const woMatch = titleElem.innerText.match(/#\s*(\d+)/);
+
+        if (!accMatch || !woMatch) return;
+
+        const accountId = accMatch[1];
+        const workOrderId = woMatch[1];
+
+        const completed = isJobCompleted(workOrderId);
+        const existingBtn = document.getElementById('btn-complete-job-ext');
+
+        // SCENARIO 1: Completed -> Remove
+        if (completed) {
+            if (existingBtn) {
+                existingBtn.remove();
+                console.log(`BEST@PEST: Job #${workOrderId} is COMPLETED. Button removed.`);
+            }
+            return;
+        }
+
+        // SCENARIO 2: Open -> Add/Update
+        if (!existingBtn) {
+            const btn = document.createElement('button');
+            btn.id = 'btn-complete-job-ext';
+            btn.innerText = 'Complete Job';
+            
+            Object.assign(btn.style, {
+                backgroundColor: '#28a745', color: 'white', border: 'none',
+                padding: '8px 12px', width: '100%', borderRadius: '4px',
+                fontWeight: 'bold', fontSize: '13px', cursor: 'pointer',
+                marginBottom: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            });
+
+            btn.onmouseover = () => btn.style.backgroundColor = '#218838';
+            btn.onmouseout = () => btn.style.backgroundColor = '#28a745';
+
+            btn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = `https://sprolive.theservicepro.net/office/wocompleted.aspx?accid=${accountId}&woid=${workOrderId}&type=1`;
+                window.open(url, '_blank');
+            };
+
+            container.insertBefore(btn, container.firstChild);
+            console.log(`BEST@PEST: Button CREATED for WO #${workOrderId}`);
+
+        } else {
+            existingBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = `https://sprolive.theservicepro.net/office/wocompleted.aspx?accid=${accountId}&woid=${workOrderId}&type=1`;
+                window.open(url, '_blank');
+            };
+            console.log(`BEST@PEST: Button UPDATED for WO #${workOrderId}`);
+        }
+    }
+
+    // 3. OBSERVER
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.addedNodes.length) {
+                const container = document.getElementById('paragrafwotab');
+                if (container) {
+                    updateOrInjectButton(container);
+                }
+            }
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    alert("Best@Pest: Scheduler Monitor is now ACTIVE!");
+}
+
+
+// -------------------------------------------------------------
+// EVENT LISTENERS
+// -------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // A. Toggle Listener
+    const toggle = document.getElementById('toggle-injection');
+    if(toggle) {
+        toggle.addEventListener('change', async (e) => {
+            if(e.target.checked) {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    func: startSchedulerMonitor,
+                    world: 'MAIN'
+                });
+            }
+        });
+    }
+
+    // B. Material Buttons Listener
+    document.body.addEventListener('click', async (e) => {
+        if (!e.target.classList.contains('mat-btn')) return;
 
         const btn = e.target;
         const data = {
@@ -87,15 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
             targetId: btn.getAttribute('data-target')
         };
 
-        // Get current tab
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-        // Execute the function in the "MAIN" world (where page JS lives)
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
             func: fillFormInPage,
             args: [data],
-            world: 'MAIN' 
+            world: 'MAIN'
         });
     });
 });
